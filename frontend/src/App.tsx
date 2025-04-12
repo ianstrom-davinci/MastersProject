@@ -1,101 +1,234 @@
 // src/App.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import './App.css';
+import './App.css'; // Keep your existing styles
 
-interface Score {
-  box_name: string;
+// --- New TypeScript Interfaces ---
+
+// For a single pick's details (from /api/participant/<name>)
+interface ParticipantPickDetail {
+  box: string;
   player_name: string;
+  status: string; // "Found", "Not Found", "Error"
   position: string;
-  thru: string;
   to_par: string;
+  thru: string;
   points: number;
 }
 
-interface ScoreData {
-  scores: Score[];
-  total_score: number;
+// For the response from /api/participant/<name>
+interface ParticipantDetailData {
+  name: string;
+  score_details: {
+    total_score: number;
+    picks: ParticipantPickDetail[];
+  };
   last_updated: string;
-  error?: string;
 }
 
-// Helper function to format the date/time
+// For an entry in the leaderboard (from /api/leaderboard)
+interface LeaderboardEntry {
+  name: string;
+  total_score: number;
+}
+
+// For the response from /api/leaderboard
+interface LeaderboardData {
+  leaderboard: LeaderboardEntry[];
+  last_updated: string;
+}
+
+// --- Helper Function (Unchanged) ---
 const formatTimestamp = (timestamp: string): string => {
   try {
+    // Handle "N/A" or "Never" gracefully
+    if (!timestamp || timestamp === "N/A" || timestamp === "Never") {
+        return "N/A";
+    }
     const date = new Date(timestamp);
-    return date.toLocaleString('en-CA', { // Use Canadian English locale
-      timeZone: 'America/Denver',       // Timezone for Calgary/Mountain Time
-      dateStyle: 'medium',              // e.g., "Sep 21, 2023"
-      timeStyle: 'short',               // e.g., "1:35 PM"
+    // Check if the date is valid before formatting
+    if (isNaN(date.getTime())) {
+      return timestamp; // Return original if invalid date
+    }
+    return date.toLocaleString('en-CA', {
+      timeZone: 'America/Denver',
+      dateStyle: 'medium',
+      timeStyle: 'short',
     });
   } catch (e) {
     console.error("Error formatting timestamp:", e);
-    return timestamp; // Fallback to original string
+    return timestamp;
   }
 };
 
+// --- Main App Component ---
 
 function App() {
-  const [data, setData] = useState<ScoreData | null>(null);
+  // State for participants list and selected view
+  const [participants, setParticipants] = useState<string[]>([]);
+  const [selectedView, setSelectedView] = useState<string | null>(null); // 'Leaderboard' or participant name
+
+  // State for the currently displayed data (participant or leaderboard)
+  const [viewData, setViewData] = useState<ParticipantDetailData | LeaderboardData | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>('N/A');
+
+  // General loading/error state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchData = async () => {
+  // --- Data Fetching Logic ---
+
+  // Fetch the list of participants on initial load
+  const fetchParticipants = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.get<ScoreData>('/api/scores');
-      setData(response.data);
-      if(response.data.error) {
-          setError(response.data.error);
-          console.error("Backend error:", response.data.error);
+      // --- IMPORTANT: Update API Host if needed ---
+      // If backend runs on different host/port (e.g., localhost:5000) during dev,
+      // you might need the full URL: 'http://localhost:5000/api/participants'
+      // Or configure a proxy in vite.config.ts
+      const response = await axios.get<{ participants: string[] }>('/api/participants');
+      const fetchedParticipants = response.data.participants;
+      setParticipants(fetchedParticipants);
+      // Default to showing the first participant or Leaderboard if none/one
+      if (fetchedParticipants.length > 0) {
+         // Automatically select the first participant (e.g., 'Ian') if available
+         setSelectedView(fetchedParticipants[0]);
+      } else {
+         setSelectedView('Leaderboard'); // Fallback if no participants configured
       }
     } catch (err) {
-      console.error("Error fetching data:", err);
-      let errorMsg = 'Failed to fetch data from the server. Is it running?';
-      if (axios.isAxiosError(err)) {
-        if (err.response) {
-          errorMsg = `Server responded with error: ${err.response.status}`;
-          console.error("Error response data:", err.response.data);
-        } else if (err.request) {
-          errorMsg = 'No response received from server. Check network or if server is running.';
-          console.error("Error request:", err.request);
-        } else {
-          errorMsg = `Error setting up request: ${err.message}`;
-        }
-      } else if (err instanceof Error) {
-          errorMsg = `An unexpected error occurred: ${err.message}`;
+      console.error("Error fetching participants:", err);
+      handleFetchError(err, "fetch participants");
+      setParticipants([]);
+      setSelectedView('Leaderboard'); // Fallback on error
+    } finally {
+      // Don't setLoading(false) here, let the subsequent view fetch handle it
+    }
+  }, []); // Empty dependency array, runs once on mount
+
+  // Fetch data for the currently selected view (participant or leaderboard)
+  const fetchViewData = useCallback(async (view: string | null) => {
+    if (!view) return; // Don't fetch if no view is selected
+
+    setLoading(true);
+    setError('');
+    setViewData(null); // Clear previous data
+
+    try {
+      let response;
+      // --- IMPORTANT: Update API Host if needed ---
+      const baseURL = ''; // Use 'http://localhost:5000' or similar if needed, else '' for proxy
+      if (view === 'Leaderboard') {
+        response = await axios.get<LeaderboardData>(`${baseURL}/api/leaderboard`);
+        setLastUpdated(response.data.last_updated);
+      } else {
+        // Assume view is a participant name
+        response = await axios.get<ParticipantDetailData>(`${baseURL}/api/participant/${encodeURIComponent(view)}`);
+        setLastUpdated(response.data.last_updated);
       }
-      setError(errorMsg);
-      setData(null);
+      setViewData(response.data);
+      // Check for backend-reported errors within the data (if applicable)
+      // if(response.data.error) { setError(response.data.error); }
+
+    } catch (err) {
+      console.error(`Error fetching data for view '${view}':`, err);
+      handleFetchError(err, `fetch ${view} data`);
+      setViewData(null);
+      setLastUpdated('N/A');
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Re-run if fetchViewData definition changes (shouldn't often)
 
+  // Helper for consistent error message handling
+  const handleFetchError = (err: unknown, context: string) => {
+      let errorMsg = `Failed to ${context}.`;
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          errorMsg = `Server error during ${context}: ${err.response.status} - ${err.response.data?.error || err.message}`;
+          console.error("Error response data:", err.response.data);
+        } else if (err.request) {
+          errorMsg = `No response received during ${context}. Server down?`;
+          console.error("Error request:", err.request);
+        } else {
+          errorMsg = `Request setup error during ${context}: ${err.message}`;
+        }
+      } else if (err instanceof Error) {
+          errorMsg = `Unexpected error during ${context}: ${err.message}`;
+      }
+      setError(errorMsg);
+  }
+
+  // --- Effects ---
+
+  // Initial effect to fetch participants
   useEffect(() => {
-    fetchData();
-    const intervalId = setInterval(fetchData, 300000); // Refresh every 5 mins
-    return () => clearInterval(intervalId);
-  }, []);
+    fetchParticipants();
+  }, [fetchParticipants]); // Depends on fetchParticipants callback
 
-  return (
-    <div className="App">
-      <h1>Masters Pool Standings</h1>
+  // Effect to fetch data when the selected view changes
+  useEffect(() => {
+    if (selectedView) {
+      fetchViewData(selectedView);
+    }
+  }, [selectedView, fetchViewData]); // Depends on selected view and the fetch callback
 
-      {loading && <p>Loading scores...</p>}
-      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+  // Effect for periodic refresh of the *current* view's data
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if (selectedView) {
+          console.log(`Refreshing data for view: ${selectedView}`);
+          fetchViewData(selectedView); // Re-fetch data for the current view
+      }
+    }, 300000); // Refresh every 5 minutes (300,000 ms)
 
-      {data && !error && (
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [selectedView, fetchViewData]); // Re-create interval if view changes
+
+  // --- Rendering Logic ---
+
+  const renderContent = () => {
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
+    if (!viewData) return <p>No data available for {selectedView || 'the selected view'}.</p>;
+
+    // --- Leaderboard View ---
+    if (selectedView === 'Leaderboard' && 'leaderboard' in viewData) {
+      const leaderboardData = viewData as LeaderboardData;
+      return (
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Name</th>
+              <th>Total Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leaderboardData.leaderboard && leaderboardData.leaderboard.length > 0 ? (
+              leaderboardData.leaderboard.map((entry, index) => (
+                <tr key={entry.name}>
+                  <td>{index + 1}</td>
+                  <td>{entry.name}</td>
+                  <td>{entry.total_score}</td>
+                </tr>
+              ))
+            ) : (
+              <tr><td colSpan={3}>Leaderboard data is not available.</td></tr>
+            )}
+          </tbody>
+        </table>
+      );
+    }
+
+    // --- Participant Detail View ---
+    if (selectedView !== 'Leaderboard' && 'score_details' in viewData) {
+      const participantData = viewData as ParticipantDetailData;
+      return (
         <>
-          <p>
-            <strong>Total Score: {data.total_score}</strong>
-            <br />
-            <em>Last Updated: {formatTimestamp(data.last_updated)} (MT)</em>
-          </p>
-          <button onClick={fetchData} disabled={loading}>
-            {loading ? 'Refreshing...' : 'Refresh Now'}
-          </button>
+          <h2>{participantData.name}'s Picks</h2>
+          <p><strong>Total Score: {participantData.score_details.total_score}</strong></p>
           <table>
             <thead>
               <tr>
@@ -105,45 +238,83 @@ function App() {
                 <th>Thru</th>
                 <th>To Par</th>
                 <th>Points</th>
+                <th>Status</th>{/* Added Status */}
               </tr>
             </thead>
             <tbody>
-              {data.scores && data.scores.length > 0 ? (
-                data.scores.map((player, index) => (
-                  <tr key={player.player_name + index}>
-                    <td>{player.box_name}</td>
-                    <td>{player.player_name}</td>
-                    <td>{player.position}</td>
-                    <td>{player.thru}</td>
-                    <td>{player.to_par}</td>
-                    <td>{player.points}</td>
+              {participantData.score_details.picks && participantData.score_details.picks.length > 0 ? (
+                participantData.score_details.picks.map((pick, index) => (
+                  <tr key={pick.player_name + index}>
+                    <td>{pick.box}</td>
+                    <td>{pick.player_name}</td>
+                    <td>{pick.position}</td>
+                    <td>{pick.thru}</td>
+                    <td>{pick.to_par}</td>
+                    <td>{pick.points}</td>
+                    <td>{pick.status}</td> {/* Display status */}
                   </tr>
                 ))
               ) : (
-                 <tr>
-                   <td colSpan={6}>{data.error ? 'Error loading scores from backend.' : 'No scores available yet. Run the scraper.'}</td>
-                 </tr>
+                 <tr><td colSpan={7}>No pick data available for this participant.</td></tr>
               )}
             </tbody>
           </table>
-
-          {/* --- Scoring Legend Section --- */}
-          <div className="scoring-legend" style={{ marginTop: '2rem', textAlign: 'left', paddingLeft: '1rem' }}>
-            <h2>Scoring Legend (Based on Final Placement)</h2>
-            <ul style={{ listStyleType: 'disc', paddingLeft: '20px' }}>
-              <li><strong>Winner:</strong> 15 points</li>
-              <li><strong>Top 5 Finish:</strong> 9 points</li>
-              <li><strong>6th - 15th Place:</strong> 6 points</li>
-              <li><strong>16th - 29th Place:</strong> 4 points</li>
-              <li><strong>30th Place or Worse:</strong> 2 points</li>
-              <li><strong>Missed Cut (MC):</strong> 0 points</li>
-            </ul>
-          </div>
-          {/* --- End Scoring Legend Section --- */}
-
         </>
-      )}
-      {!loading && !data && !error && <p>Could not load data. Ensure the scraper has run and the server is running.</p>}
+      );
+    }
+
+    // Fallback if data structure doesn't match expected types
+    return <p>Could not display data for {selectedView}. Unexpected format.</p>;
+  };
+
+  return (
+    <div className="App">
+      <h1>Masters Pool Standings</h1>
+
+      {/* --- View Selection --- */}
+      <div className="view-selector" style={{ marginBottom: '1rem' }}>
+        {participants.map(name => (
+          <button
+            key={name}
+            onClick={() => setSelectedView(name)}
+            disabled={loading || selectedView === name}
+            style={{ marginRight: '0.5rem', fontWeight: selectedView === name ? 'bold' : 'normal' }}
+          >
+            {name}
+          </button>
+        ))}
+        <button
+          onClick={() => setSelectedView('Leaderboard')}
+          disabled={loading || selectedView === 'Leaderboard'}
+          style={{ fontWeight: selectedView === 'Leaderboard' ? 'bold' : 'normal' }}
+        >
+          Leaderboard
+        </button>
+      </div>
+
+      {/* --- Timestamp and Refresh --- */}
+      <div style={{ marginBottom: '1rem' }}>
+          <em>Last Updated: {formatTimestamp(lastUpdated)} (MT)</em>
+          <button onClick={() => fetchViewData(selectedView)} disabled={loading} style={{ marginLeft: '1rem' }}>
+            {loading ? 'Refreshing...' : 'Refresh Now'}
+          </button>
+      </div>
+
+      {/* --- Dynamic Content Area --- */}
+      {renderContent()}
+
+      {/* --- Scoring Legend (Optional - keep or remove) --- */}
+      <div className="scoring-legend" style={{ marginTop: '2rem', textAlign: 'left', paddingLeft: '1rem' }}>
+        <h2>Scoring Legend</h2>
+         <ul style={{ listStyleType: 'disc', paddingLeft: '20px' }}>
+            <li><strong>Winner:</strong> 15 points</li>
+            <li><strong>Top 5 Finish:</strong> 9 points</li>
+            <li><strong>6th - 15th Place:</strong> 6 points</li>
+            <li><strong>16th - 29th Place:</strong> 4 points</li>
+            <li><strong>30th Place or Worse:</strong> 2 points</li>
+            <li><strong>Missed Cut (MC) / WD / DQ:</strong> 0 points</li>
+          </ul>
+      </div>
     </div>
   );
 }
