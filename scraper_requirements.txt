@@ -1,0 +1,4 @@
+selenium
+webdriver-manager
+beautifulsoup4
+requests # Often useful, good to include

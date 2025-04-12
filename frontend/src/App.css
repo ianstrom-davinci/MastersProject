@@ -1,0 +1,82 @@
+.App {
+  font-family: sans-serif;
+  padding: 20px;
+  max-width: 900px; /* Optional: constrain width */
+  margin: 0 auto; /* Center content */
+}
+
+h1 {
+    text-align: center;
+    color: #003300; /* Dark green */
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
+}
+
+th, td {
+  border: 1px solid #ccc; /* Lighter border */
+  padding: 10px 12px; /* More padding */
+  text-align: left;
+  vertical-align: middle; /* Align text vertically */
+}
+
+th {
+  background-color: #e6f3e6; /* Light green background */
+  font-weight: bold;
+  color: #003300;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9; /* Zebra striping */
+}
+
+tr:hover {
+    background-color: #f1f1f1; /* Hover effect */
+}
+
+button {
+    padding: 10px 18px; /* Slightly larger button */
+    margin: 15px 0;
+    cursor: pointer;
+    background-color: #006400; /* Darker green button */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    transition: background-color 0.2s ease; /* Smooth transition */
+}
+
+button:hover:not(:disabled) {
+    background-color: #004d00; /* Darken on hover */
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    background-color: #cccccc;
+}
+
+p {
+    line-height: 1.6; /* Improve readability */
+}
+
+p strong {
+    font-size: 1.1em;
+}
+
+p em {
+    color: #555;
+    font-size: 0.9em;
+}
+
+/* Style for error messages */
+p[style*="color: red"] {
+    background-color: #ffebee; /* Light red background */
+    border: 1px solid #ef9a9a; /* Red border */
+    padding: 10px;
+    border-radius: 4px;
+}

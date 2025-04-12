@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    container_name: masters_backend
+    volumes:
+      - ./data:/app/data # Mount the shared data volume
+    ports:
+      - "8443:8443" # Map host port 8443 to container port 8443
+    restart: unless-stopped
+    networks:
+      - masters_net
+
+  scraper:
+    build:
+      context: .
+      dockerfile: scraper.Dockerfile
+    container_name: masters_scraper
+    volumes:
+      - ./data:/app/data # Mount the same shared data volume
+    depends_on:
+      - backend # Optional: wait for backend conceptually, though not strictly needed
+    restart: unless-stopped
+    networks:
+      - masters_net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    container_name: masters_frontend
+    ports:
+      - "80:80" # Map host port 80 to container port 80 (Nginx)
+      # Use "8080:80" if port 80 is busy on your host
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - masters_net
+
+volumes:
+  data: # Declare the volume (though we use a bind mount here)
+    # Driver defaults to local
+
+networks:
+  masters_net: # Define the network for containers to communicate
+    driver: bridge
