@@ -1,4 +1,4 @@
-version: '3.8' # You can optionally remove this line later, it's obsolete
+version: '3.8'
 
 services:
   backend:
@@ -7,12 +7,19 @@ services:
       dockerfile: backend.Dockerfile
     container_name: masters_backend
     volumes:
-      - ./data:/app/data # Mount the shared data volume
+      - ./data:/app/data # Mount the shared data volume (for the DB)
+      - ./config.json:/app/config.json:ro # Mount config.json read-only
     ports:
-      - "8443:8443" # Map host port 8443 to container port 8443
+      - "5000:5000" # Map host port 5000 to container port 5000 (Flask default)
+      # If you prefer accessing via 8443 on your host:
+      # - "8443:5000"
     restart: unless-stopped
     networks:
       - masters_net
+    # Make sure the backend waits for the config file to potentially be created/mounted
+    # This isn't strictly necessary with bind mounts but can help clarity
+    depends_on:
+      - scraper # Keep dependency if scraper creates the DB initially
 
   scraper:
     build:
@@ -21,13 +28,13 @@ services:
     container_name: masters_scraper
     volumes:
       - ./data:/app/data # Mount the same shared data volume
-    depends_on:
-      - backend # Optional: wait for backend conceptually, though not strictly needed
+    # depends_on: # Removing explicit backend dependency - not strictly needed for scraper
+    #   - backend
     restart: unless-stopped
     networks:
       - masters_net
-    environment: # <-- Added this section
-      - PYTHONUNBUFFERED=1 # <-- Added this line
+    environment:
+      - PYTHONUNBUFFERED=1
 
   frontend:
     build:
@@ -35,18 +42,20 @@ services:
       dockerfile: frontend.Dockerfile
     container_name: masters_frontend
     ports:
-      - "80:80" # Map host port 80 to container port 80 (Nginx)
-      # Use "8080:80" if port 80 is busy on your host
+      - "80:80" # Keep mapping host port 80 to container port 80 (Nginx)
+      # Use "8080:80" or similar if port 80 is busy on your host
     depends_on:
-      - backend
+      - backend # Frontend needs the backend API to be available
     restart: unless-stopped
     networks:
       - masters_net
 
+# We are using bind mounts (./data, ./config.json) not named volumes,
+# so this 'volumes' declaration isn't strictly needed but doesn't hurt.
+# You can remove it if you prefer.
 volumes:
-  data: # Declare the volume (though we use a bind mount here)
-    # Driver defaults to local
+  data:
 
 networks:
-  masters_net: # Define the network for containers to communicate
+  masters_net:
     driver: bridge

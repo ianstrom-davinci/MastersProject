@@ -1,0 +1,94 @@
+{
+  "pool_structure": {
+    "Box 1: Top of the Charts": {
+      "players": ["Scottie Scheffler", "Rory McIlroy", "Xander Schauffele", "Collin Morikawa", "Ludvig Aberg", "Jon Rahm"]
+    },
+    "Box 2: The next 5": {
+      "players": ["Hideki Matsuyama", "Russell Henley", "Viktor Hovland", "Justin Thomas", "Wyndham Clark"]
+    },
+    "Box 3: On The Cusp": {
+      "players": ["Cameron Young", "Patrick Cantlay", "Min Woo Lee", "Tom Kim", "Tommy Fleetwood", "Joaquin Niemann", "Tyrell Hatton"]
+    },
+    "Box 4: O Canada": {
+      "players": ["Corey Conners", "Taylor Pendrith", "Nick Taylor"]
+    },
+    "Box 5: Long Bombers": {
+      "players": ["Byeong Hun An", "Daniel Berger", "Sam Burns", "Will Zalatoris", "Tony Finau", "J.T. Poston", "Sahith Theegala"]
+    },
+    "Box 6: Past Champs": {
+      "players": ["Patrick Reed", "Charl Schwartzel", "Bubba Watson", "Adam Scott", "Sergio Garcia", "Zach Johnson"]
+    },
+    "Box 7: UK and Beyond": {
+      "players": ["Robert MacIntyre", "Aaron Rai", "Justin Rose", "Danny Willett", "Sepp Straka", "Sungjae Im"]
+    },
+    "Box 8: Elder Statesmen": {
+      "players": ["Angel Cabrera", "Mike Weir", "Vijay Singh", "Jose Maria Olazabal", "Bernhard Langer", "Fred Couples"]
+    },
+    "Box 9: Major Winners": {
+      "players": ["Brooks Koepka", "Bryson DeChambeau", "Matt Fitzpatrick", "Cameron Smith", "Shane Lowry", "Jordan Spieth", "Dustin Johnson", "Phil Mickelson"]
+    },
+    "Box 10: First Masters": {
+      "players": ["Davis Thompson", "Brian Campbell", "Rafael Campos", "Laurie Canter", "Thomas Detry", "Nicolás Echavarría", "Matt McCarty", "Maverick McNealy"]
+    },
+    "Box 11: The Amateurs": {
+      "players": ["Jose Luis Ballester Barrio", "Evan Beck", "Hiroshi Tai", "Noah Kent", "Justin Hastings"]
+    },
+    "Box 12: World Team": {
+      "players": ["Matthieu Pavon", "Cameron Davis", "Thriston Lawrence", "Jhonattan Vegas", "Stephan Jaeger", "Christiaan Bezuidenhout"]
+    },
+    "Box 13: Longest of Shots": {
+      "players": ["J.J. Spaun", "Michael Kim", "Adam Schenk", "Davis Riley", "Patton Kizzire", "Austin Eckroat", "Tom Hoge", "Denny McCarthy"]
+    },
+    "Box 14: Cagey Veterans": {
+      "players": ["Max Homa", "Keegan Bradley", "Jason Day", "Harris English", "Lucas Glover", "Billy Horschel", "Brian Harman", "Chris Kirk"]
+    },
+    "Box 15: Young Guns": {
+      "players": ["Akshay Bhatia", "Max Greyserman", "Nicolai Hojgaard", "Nick Dunlap", "Joe Highsmith", "Kevin Yu", "Rasmus Hojgaard"]
+    }
+  },
+  "participants": [
+    {
+      "name": "Ian",
+      "picks": {
+        "Box 1: Top of the Charts": "Collin Morikawa",
+        "Box 2: The next 5": "Viktor Hovland",
+        "Box 3: On The Cusp": "Patrick Cantlay",
+        "Box 4: O Canada": "Corey Conners",
+        "Box 5: Long Bombers": "Tony Finau",
+        "Box 6: Past Champs": "Adam Scott",
+        "Box 7: UK and Beyond": "Sepp Straka",
+        "Box 8: Elder Statesmen": "Mike Weir",
+        "Box 9: Major Winners": "Bryson DeChambeau",
+        "Box 10: First Masters": "Davis Thompson",
+        "Box 11: The Amateurs": "Jose Luis Ballester Barrio",
+        "Box 12: World Team": "Matthieu Pavon",
+        "Box 13: Longest of Shots": "J.J. Spaun",
+        "Box 14: Cagey Veterans": "Max Homa",
+        "Box 15: Young Guns": "Nicolai Hojgaard"
+      }
+    }
+    /* -- Start Example: Uncomment and add Kenton's (or others') picks --
+    , // <-- Don't forget this comma between participant objects!
+    {
+      "name": "Kenton", // Replace with friend's name
+      "picks": {
+        "Box 1: Top of the Charts": "Scottie Scheffler", // Replace with Kenton's pick for Box 1
+        "Box 2: The next 5": "Hideki Matsuyama", // Replace with Kenton's pick for Box 2
+        "Box 3: On The Cusp": "Cameron Young", // Replace ...
+        "Box 4: O Canada": "Nick Taylor", // Replace ...
+        "Box 5: Long Bombers": "Will Zalatoris", // Replace ...
+        "Box 6: Past Champs": "Patrick Reed", // Replace ...
+        "Box 7: UK and Beyond": "Justin Rose", // Replace ...
+        "Box 8: Elder Statesmen": "Fred Couples", // Replace ...
+        "Box 9: Major Winners": "Brooks Koepka", // Replace ...
+        "Box 10: First Masters": "Laurie Canter", // Replace ...
+        "Box 11: The Amateurs": "Hiroshi Tai", // Replace ...
+        "Box 12: World Team": "Stephan Jaeger", // Replace ...
+        "Box 13: Longest of Shots": "Tom Hoge", // Replace ...
+        "Box 14: Cagey Veterans": "Jason Day", // Replace ...
+        "Box 15: Young Guns": "Nick Dunlap" // Replace with Kenton's pick for Box 15
+      }
+    }
+    -- End Example -- */
+  ]
+}
