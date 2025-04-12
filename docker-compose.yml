@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.8' # You can optionally remove this line later, it's obsolete
 
 services:
   backend:
@@ -26,6 +26,8 @@ services:
     restart: unless-stopped
     networks:
       - masters_net
+    environment: # <-- Added this section
+      - PYTHONUNBUFFERED=1 # <-- Added this line
 
   frontend:
     build:
