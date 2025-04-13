@@ -7,19 +7,19 @@ services:
       dockerfile: backend.Dockerfile
     container_name: masters_backend
     volumes:
-      - ./data:/app/data # Mount the shared data volume (for the DB)
+      - ./data:/app/data # Mount the shared data volume (for the DB) using a bind mount
       - ./config.json:/app/config.json:ro # Mount config.json read-only
     ports:
-      - "5000:5000" # Map host port 5000 to container port 5000 (Flask default)
-      # If you prefer accessing via 8443 on your host:
-      # - "8443:5000"
+      # --- CORRECTED MAPPING ---
+      # Maps port 5000 on your host machine to port 8443 inside the container,
+      # which is where Gunicorn is listening (as defined in backend.Dockerfile).
+      - "5000:8443"
     restart: unless-stopped
     networks:
       - masters_net
-    # Make sure the backend waits for the config file to potentially be created/mounted
-    # This isn't strictly necessary with bind mounts but can help clarity
+    # Backend depends on scraper (e.g., if scraper creates the DB initially)
     depends_on:
-      - scraper # Keep dependency if scraper creates the DB initially
+      - scraper
 
   scraper:
     build:
@@ -27,14 +27,13 @@ services:
       dockerfile: scraper.Dockerfile
     container_name: masters_scraper
     volumes:
-      - ./data:/app/data # Mount the same shared data volume
-    # depends_on: # Removing explicit backend dependency - not strictly needed for scraper
-    #   - backend
+      - ./data:/app/data # Mount the same shared data volume using a bind mount
+    # No explicit backend dependency needed for scraper to run
     restart: unless-stopped
     networks:
       - masters_net
     environment:
-      - PYTHONUNBUFFERED=1
+      - PYTHONUNBUFFERED=1 # Ensures Python logs appear in Docker logs immediately
 
   frontend:
     build:
@@ -42,20 +41,26 @@ services:
       dockerfile: frontend.Dockerfile
     container_name: masters_frontend
     ports:
-      - "80:80" # Keep mapping host port 80 to container port 80 (Nginx)
+      # Maps port 80 on your host to port 80 in the container (Nginx default)
       # Use "8080:80" or similar if port 80 is busy on your host
+      - "80:80"
+    # Frontend needs the backend API to be available
     depends_on:
-      - backend # Frontend needs the backend API to be available
+      - backend
     restart: unless-stopped
     networks:
       - masters_net
 
-# We are using bind mounts (./data, ./config.json) not named volumes,
-# so this 'volumes' declaration isn't strictly needed but doesn't hurt.
-# You can remove it if you prefer.
-volumes:
-  data:
+# NOTE on Volumes:
+# The services currently use bind mounts (e.g., './data:/app/data').
+# If you prefer Docker-managed named volumes for better performance and permission handling,
+# you could uncomment the 'volumes' section below and change the service volume mounts
+# from './data:/app/data' to 'data:/app/data'.
+# The database file would then live inside the Docker-managed volume area, not the ./data folder.
+# ---
+# volumes:
+#   data: {} # Declares a named volume called 'data'
 
 networks:
   masters_net:
-    driver: bridge
+    driver: bridge # Use the default bridge driver for the custom network
