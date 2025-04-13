@@ -78,76 +78,7 @@ function App() {
 
   // --- Data Fetching Logic ---
 
-  // Fetch the list of participants on initial load
-  // Fetch the list of participants on initial load
-  const fetchParticipants = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      // --- IMPORTANT: Update API Host if needed ---
-      // Use '/api/participants' assuming proxy or same-origin deployment
-      const response = await axios.get<{ participants: string[] }>('/api/participants');
-      const fetchedParticipants = response.data.participants;
-      setParticipants(fetchedParticipants);
-
-      // --- CHANGE HERE: Always default to Leaderboard ---
-      setSelectedView('Leaderboard'); // Set Leaderboard as the default view
-
-    } catch (err) {
-      console.error("Error fetching participants:", err);
-      handleFetchError(err, "fetch participants");
-      setParticipants([]);
-      setSelectedView('Leaderboard'); // Fallback on error still makes sense
-    } finally {
-      // Don't setLoading(false) here, let the subsequent view fetch handle it
-    }
-  }, []); // Empty dependency array, runs once on mount
-
-    } catch (err) {
-      console.error("Error fetching participants:", err);
-      handleFetchError(err, "fetch participants");
-      setParticipants([]);
-      setSelectedView('Leaderboard'); // Fallback on error
-    } finally {
-      // Don't setLoading(false) here, let the subsequent view fetch handle it
-    }
-  }, []); // Empty dependency array, runs once on mount
-
-  // Fetch data for the currently selected view (participant or leaderboard)
-  const fetchViewData = useCallback(async (view: string | null) => {
-    if (!view) return; // Don't fetch if no view is selected
-
-    setLoading(true);
-    setError('');
-    setViewData(null); // Clear previous data
-
-    try {
-      let response;
-      // --- IMPORTANT: Update API Host if needed ---
-      const baseURL = ''; // Use 'http://localhost:5000' or similar if needed, else '' for proxy
-      if (view === 'Leaderboard') {
-        response = await axios.get<LeaderboardData>(`${baseURL}/api/leaderboard`);
-        setLastUpdated(response.data.last_updated);
-      } else {
-        // Assume view is a participant name
-        response = await axios.get<ParticipantDetailData>(`${baseURL}/api/participant/${encodeURIComponent(view)}`);
-        setLastUpdated(response.data.last_updated);
-      }
-      setViewData(response.data);
-      // Check for backend-reported errors within the data (if applicable)
-      // if(response.data.error) { setError(response.data.error); }
-
-    } catch (err) {
-      console.error(`Error fetching data for view '${view}':`, err);
-      handleFetchError(err, `fetch ${view} data`);
-      setViewData(null);
-      setLastUpdated('N/A');
-    } finally {
-      setLoading(false);
-    }
-  }, []); // Re-run if fetchViewData definition changes (shouldn't often)
-
-  // Helper for consistent error message handling
+  // Helper for consistent error message handling (Placed before use)
   const handleFetchError = (err: unknown, context: string) => {
       let errorMsg = `Failed to ${context}.`;
       if (axios.isAxiosError(err)) {
@@ -166,6 +97,62 @@ function App() {
       setError(errorMsg);
   }
 
+  // Fetch the list of participants on initial load
+  const fetchParticipants = useCallback(async () => {
+    // setLoading(true); // Let fetchViewData handle initial loading state
+    setError('');
+    try {
+      // Use '/api/participants' assuming proxy or same-origin deployment
+      const response = await axios.get<{ participants: string[] }>('/api/participants');
+      const fetchedParticipants = response.data.participants;
+      setParticipants(fetchedParticipants);
+
+      // --- CHANGE HERE: Always default to Leaderboard ---
+      setSelectedView('Leaderboard'); // Set Leaderboard as the default view
+
+    } catch (err) {
+      console.error("Error fetching participants:", err);
+      handleFetchError(err, "fetch participants");
+      setParticipants([]);
+      setSelectedView('Leaderboard'); // Fallback on error still makes sense
+    } finally {
+      // Don't setLoading(false) here, let the subsequent view fetch handle it
+    }
+  }, []); // Empty dependency array, runs once on mount
+
+  // Fetch data for the currently selected view (participant or leaderboard)
+  const fetchViewData = useCallback(async (view: string | null) => {
+    if (!view) return; // Don't fetch if no view is selected
+
+    setLoading(true); // Set loading true *before* fetching view data
+    setError('');
+    setViewData(null); // Clear previous data
+
+    try {
+      let response;
+      // --- IMPORTANT: Update API Host if needed ---
+      const baseURL = ''; // Use 'http://localhost:5000' or similar if needed, else '' for proxy
+      if (view === 'Leaderboard') {
+        response = await axios.get<LeaderboardData>(`${baseURL}/api/leaderboard`);
+        setLastUpdated(response.data.last_updated);
+      } else {
+        // Assume view is a participant name
+        response = await axios.get<ParticipantDetailData>(`${baseURL}/api/participant/${encodeURIComponent(view)}`);
+        setLastUpdated(response.data.last_updated);
+      }
+      setViewData(response.data);
+
+    } catch (err) {
+      console.error(`Error fetching data for view '${view}':`, err);
+      handleFetchError(err, `fetch ${view} data`);
+      setViewData(null);
+      setLastUpdated('N/A');
+    } finally {
+      setLoading(false); // Set loading false after fetching view data
+    }
+  }, []); // Re-run if fetchViewData definition changes (shouldn't often)
+
+
   // --- Effects ---
 
   // Initial effect to fetch participants
@@ -175,6 +162,7 @@ function App() {
 
   // Effect to fetch data when the selected view changes
   useEffect(() => {
+    // This effect now triggers fetchViewData, which handles the loading state
     if (selectedView) {
       fetchViewData(selectedView);
     }
