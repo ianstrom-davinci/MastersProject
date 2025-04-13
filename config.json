@@ -131,7 +131,7 @@
       "name": "Josh",
       "picks": {
         "Box 1: Top of the Charts": "Scottie Scheffler",
-        "Box 2: The next 5": "Hideki Matsuyama", # Assuming "Matsuyam" was a typo for Matsuyama
+        "Box 2: The next 5": "Hideki Matsuyama",
         "Box 3: On The Cusp": "Min Woo Lee",
         "Box 4: O Canada": "Corey Conners",
         "Box 5: Long Bombers": "Tony Finau",
@@ -146,6 +146,7 @@
         "Box 14: Cagey Veterans": "Max Homa",
         "Box 15: Young Guns": "Akshay Bhatia"
       }
+    },
     {
       "name": "Kenton",
       "picks": {
