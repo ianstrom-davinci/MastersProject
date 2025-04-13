@@ -79,24 +79,30 @@ function App() {
   // --- Data Fetching Logic ---
 
   // Fetch the list of participants on initial load
+  // Fetch the list of participants on initial load
   const fetchParticipants = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       // --- IMPORTANT: Update API Host if needed ---
-      // If backend runs on different host/port (e.g., localhost:5000) during dev,
-      // you might need the full URL: 'http://localhost:5000/api/participants'
-      // Or configure a proxy in vite.config.ts
+      // Use '/api/participants' assuming proxy or same-origin deployment
       const response = await axios.get<{ participants: string[] }>('/api/participants');
       const fetchedParticipants = response.data.participants;
       setParticipants(fetchedParticipants);
-      // Default to showing the first participant or Leaderboard if none/one
-      if (fetchedParticipants.length > 0) {
-         // Automatically select the first participant (e.g., 'Ian') if available
-         setSelectedView(fetchedParticipants[0]);
-      } else {
-         setSelectedView('Leaderboard'); // Fallback if no participants configured
-      }
+
+      // --- CHANGE HERE: Always default to Leaderboard ---
+      setSelectedView('Leaderboard'); // Set Leaderboard as the default view
+
+    } catch (err) {
+      console.error("Error fetching participants:", err);
+      handleFetchError(err, "fetch participants");
+      setParticipants([]);
+      setSelectedView('Leaderboard'); // Fallback on error still makes sense
+    } finally {
+      // Don't setLoading(false) here, let the subsequent view fetch handle it
+    }
+  }, []); // Empty dependency array, runs once on mount
+
     } catch (err) {
       console.error("Error fetching participants:", err);
       handleFetchError(err, "fetch participants");
