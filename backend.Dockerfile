@@ -14,16 +14,17 @@ RUN pip install --no-cache-dir -r backend_requirements.txt
 COPY server.py .
 # Note: We don't copy the DB file here, it will be mounted via volume
 
-# Make port 8443 available to the world outside this container (internal port)
-# Gunicorn will bind to this port
+# Make port 8443 available (internal port Gunicorn binds to)
 EXPOSE 8443
 
 # Define environment variable (optional, good practice)
 ENV FLASK_APP=server:app
+# Ensure Python output isn't buffered (helps see logs immediately)
+ENV PYTHONUNBUFFERED=1
 
 # Ensure the directory for the volume mount exists
 RUN mkdir -p /app/data
 
 # Run server.py when the container launches using Gunicorn
-# Bind to 0.0.0.0 to accept connections from outside the container (within Docker network)
-CMD ["gunicorn", "--bind", "0.0.0.0:8443", "server:app"]
+# ADDED --preload flag
+CMD ["gunicorn", "--bind", "0.0.0.0:8443", "--workers", "1", "--preload", "server:app"]
