@@ -66,6 +66,26 @@
         "Box 14: Cagey Veterans": "Max Homa",
         "Box 15: Young Guns": "Nicolai Hojgaard"
       }
+    },
+    {
+      "name": "Kenton",
+      "picks": {
+        "Box 1: Top of the Charts": "Scottie Scheffler",
+        "Box 2: The next 5": "Viktor Hovland",
+        "Box 3: On The Cusp": "Min Woo Lee",
+        "Box 4: O Canada": "Corey Conners",
+        "Box 5: Long Bombers": "Sahith Theegala",
+        "Box 6: Past Champs": "Adam Scott",
+        "Box 7: UK and Beyond": "Justin Rose",
+        "Box 8: Elder Statesmen": "Fred Couples",
+        "Box 9: Major Winners": "Bryson DeChambeau",
+        "Box 10: First Masters": "Maverick McNealy",
+        "Box 11: The Amateurs": "Jose Luis Ballester Barrio",
+        "Box 12: World Team": "Thriston Lawrence",
+        "Box 13: Longest of Shots": "J.J. Spaun",
+        "Box 14: Cagey Veterans": "Max Homa",
+        "Box 15: Young Guns": "Nick Dunlap"
+      }
     }
   ]
 }
